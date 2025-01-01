@@ -1,6 +1,6 @@
 # MTreeView
 
-![Demo Video](Resources/demo.mp4)
+![Demo Video](Resources/demo.gif)
 
 MTreeView is a lightweight and flexible tree view implementation for SwiftUI. It simplifies the display of hierarchical data in a visually structured format, allowing developers to integrate tree views seamlessly into their SwiftUI projects.
 
