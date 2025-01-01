@@ -7,99 +7,129 @@
 
 import SwiftUI
 
-
-import SwiftUI
-
-struct TreeView: View {
-    
+struct TreeView<CustomNodeGroupView: View, CustomNodeView: View>: View {
     @StateObject var viewModel: TreeViewModel = .init()
+    let nodeGroupContent: (NodeGroup, Bool) -> CustomNodeGroupView
+    let nodeContent: (Node, Bool) -> CustomNodeView
     
     var body: some View {
         GeometryReader { geo in
-            ZStack {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 0) {
-                        ForEach(viewModel.listGroups()) { group in
-                            NodeGroupView(
-                                group: group
-                            )
-                            .id(group.id)
+            ScrollViewReader { scroll in
+                ZStack {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 0) {
+                            Rectangle().fill(.clear)
+                                .frame(height: 1)
+                                .overlay {
+                                    GeometryReader { scrollGeo in
+                                        Color.clear.onChange(of: scrollGeo.frame(in: .global).minY) { _, newValue in
+                                            viewModel.scrollOffset = newValue
+                                        }
+                                    }
+                                }
+                            ForEach(viewModel.listGroups()) { group in
+                                NodeGroupView(
+                                    group: group,
+                                    isDragging: false,
+                                    nodeGroupContent: nodeGroupContent,
+                                    nodeContent: nodeContent
+                                )
+                                .id(group.id)
+                            }
+                        }
+                    }
+                    if viewModel.draggingOverNode != nil {
+                        let frame = viewModel.nodeFrames[viewModel.draggingOverNode!] ?? .zero
+                        Capsule()
+                            .fill(.blue)
+                            .frame(width: frame.width, height: 2)
+                            .position(x: frame.midX, y: frame.isPointInUpperHalf(viewModel.draggedLocation) ? frame.minY + viewModel.nodeHeight : frame.maxY)
+                    }
+                    if viewModel.draggingOverGroup != nil {
+                        let frame = viewModel.nodeGroupFrames[viewModel.draggingOverGroup!] ?? .zero
+                        
+                        Capsule()
+                            .fill(.blue)
+                            .frame(width: frame.width, height: 2)
+                            .position(x: frame.midX, y: frame.isPointInUpperHalf(viewModel.draggedLocation) ? frame.minY : frame.maxY)
+                    }
+                    if let draggingId = viewModel.draggingItemId {
+                        let isGroup = viewModel.isDraggingGroup
+                        if isGroup {
+                            if let frame = viewModel.nodeGroupFrames[draggingId] {
+                                NodeGroupView(group: viewModel.getSingleGroup(with: draggingId), isDragging: true, nodeGroupContent: nodeGroupContent, nodeContent: nodeContent)
+                                    .frame(width: frame.width, height: frame.height)
+                                    .position(x: frame.midX + viewModel.draggedTranslation.width,
+                                              y: frame.midY + viewModel.draggedTranslation.height + (viewModel.scrollStartOffset - viewModel.scrollOffset))
+                            }
+                        } else {
+                            if let frame = viewModel.nodeFrames[draggingId] {
+                                NodeView(node: viewModel.getSingleNode(with: draggingId), isDragging: true, nodeContent: nodeContent)
+                                    .frame(width: frame.width, height: frame.height)
+                                    .position(x: frame.midX + viewModel.draggedTranslation.width,
+                                              y: frame.midY + viewModel.draggedTranslation.height + (viewModel.scrollStartOffset - viewModel.scrollOffset))
+                            }
                         }
                     }
                 }
-                if viewModel.draggingOverNode != nil {
-                    let frame = viewModel.nodeFrames[viewModel.draggingOverNode!] ?? .zero
-                    Capsule()
-                        .fill(.blue)
-                        .frame(width: frame.width, height: 2)
-                        .position(x: frame.midX, y: frame.isPointInUpperHalf(viewModel.draggedLocation) ? frame.minY + viewModel.nodeHeight : frame.maxY)
-                }
-                if viewModel.draggingOverGroup != nil {
-                    let frame = viewModel.nodeGroupFrames[viewModel.draggingOverGroup!] ?? .zero
-                    
-                    Capsule()
-                        .fill(.red)
-                        .frame(width: frame.width, height: 2)
-                        .position(x: frame.midX, y: frame.isPointInUpperHalf(viewModel.draggedLocation) ? frame.minY : frame.maxY)
-                }
-                if viewModel.draggedLocation != .zero {
-                    Circle()
-                        .fill(.red)
-                        .frame(width: 10, height: 10)
-                        .position(viewModel.draggedLocation)
-                }
-            }
-            .coordinateSpace(name: "MTreeViewCoordinateSpace")
-            .environmentObject(viewModel)
-            .onChange(of: viewModel.draggedLocation) { oldValue, newValue in
-                if geo.frame(in: .local).isPointCloseToTop(newValue) {
-                    print("top \(Int.random(in: 0...999))")
-                } else if geo.frame(in: .local).isPointCloseToBottom(newValue) {
-                    print("bottom \(Int.random(in: 0...999))")
-                    
+                .coordinateSpace(name: "MTreeViewCoordinateSpace")
+                .environmentObject(viewModel)
+                .onChange(of: viewModel.draggedLocation) { _, newValue in
+                    if newValue != .zero {
+                        if geo.frame(in: .local).isPointCloseToTop(newValue) {
+                            withAnimation {
+                                scroll.scrollTo(viewModel.findNextItemToScrollto(direction: .up, point: newValue), anchor: .top)
+                            }
+                        } else if geo.frame(in: .local).isPointCloseToBottom(newValue) {
+                            withAnimation {
+                                scroll.scrollTo(viewModel.findNextItemToScrollto(direction: .down, point: newValue), anchor: .bottom)
+                            }
+                        }
+                    }
                 }
             }
         }
     }
-    
-    
 }
-
-// MARK: - ParentNodeView
-struct NodeGroupView: View {
-    
+struct NodeGroupView<CustomNodeGroupView: View, CustomNodeView: View>: View {
     var group: NodeGroup
+    var isDragging: Bool
+    let nodeGroupContent: (NodeGroup, Bool) -> CustomNodeGroupView
+    let nodeContent: (Node, Bool) -> CustomNodeView
+    @EnvironmentObject var viewModel: TreeViewModel
+    
     var nodes: [Node] {
         viewModel.listNodes(in: group.id, with: nil)
     }
-    @EnvironmentObject var viewModel: TreeViewModel
-    
-    var xOffset: CGFloat {
-        viewModel.draggingItemId == group.id ? viewModel.draggedTranslation.width : 0.0
-    }
-    
-    var yOffset: CGFloat {
-        viewModel.draggingItemId == group.id ? viewModel.draggedTranslation.height : 0.0
-    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Parent Node
-            HStack {
-                Text(group.title)
-                Spacer()
-            }
-            .padding(.horizontal, 6)
-            .frame(height: viewModel.groupHeight)
-            .contentShape(Rectangle())
-            .background(Color.blue.opacity(0.2))
+            nodeGroupContent(group, isDragging)
+                .gesture(
+                    DragGesture(coordinateSpace: .named("MTreeViewCoordinateSpace"))
+                        .onChanged({ value in
+                            if viewModel.draggingItemId != group.id {
+                                viewModel.draggingItemId = group.id
+                                viewModel.scrollStartOffset = viewModel.scrollOffset
+                            }
+                            viewModel.draggedTranslation = value.translation
+                            viewModel.draggedLocation = value.location
+                        })
+                        .onEnded({ _ in
+                            viewModel.draggedTranslation = .zero
+                            viewModel.draggingItemId = nil
+                            viewModel.draggedLocation = .zero
+                        }),
+                    isEnabled: !isDragging
+                )
             
-            // Child Nodes
             if !nodes.isEmpty {
-                LazyVStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: 0) {
                     ForEach(nodes) { node in
                         NodeView(
-                            node: node
+                            node: node,
+                            isDragging: isDragging,
+                            nodeContent: nodeContent
                         )
                         .id(node.id)
                     }
@@ -107,67 +137,60 @@ struct NodeGroupView: View {
                 .padding(.leading, 20)
             }
         }
-        .offset(x: xOffset, y: yOffset)
+        
         .overlay {
-            GeometryReader { geo in
-                Color.clear
-                    .onChange(of: geo.frame(in: .named("MTreeViewCoordinateSpace"))) { _, newValue in
-                        DispatchQueue.main.async {
-                            self.viewModel.nodeGroupFrames[group.id] = newValue
+            if !isDragging {
+                GeometryReader { geo in
+                    Color.clear
+                        .onChange(of: geo.frame(in: .named("MTreeViewCoordinateSpace"))) { _, newValue in
+                            DispatchQueue.main.async {
+                                self.viewModel.nodeGroupFrames[group.id] = newValue
+                            }
                         }
-                    }
+                }
             }
         }
-        .gesture(
-            DragGesture(coordinateSpace: .named("MTreeViewCoordinateSpace"))
-                .onChanged({ value in
-                    if viewModel.draggingItemId != group.id {
-                        viewModel.draggingItemId = group.id
-                    }
-                    viewModel.draggedTranslation = value.translation
-                    viewModel.draggedLocation = value.location
-                }).onEnded({ value in
-                    viewModel.draggedTranslation = .zero
-                    viewModel.draggingItemId = nil
-                    viewModel.draggedLocation = .zero
-                })
-        )
     }
 }
 
-struct NodeView: View {
+struct NodeView<CustomNodeView: View>: View {
     var node: Node
+    var isDragging: Bool
+    let nodeContent: (Node, Bool) -> CustomNodeView
+    @EnvironmentObject var viewModel: TreeViewModel
+    
     var children: [Node] {
         viewModel.listNodes(in: node.groupId, with: node.id)
     }
-    @EnvironmentObject var viewModel: TreeViewModel
-    
-    var xOffset: CGFloat {
-        viewModel.draggingItemId == node.id ? viewModel.draggedTranslation.width : 0.0
-    }
-    
-    var yOffset: CGFloat {
-        viewModel.draggingItemId == node.id ? viewModel.draggedTranslation.height : 0.0
-    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Text(node.title)
-                    .foregroundStyle(viewModel.draggingOverNode == node.id ? .red : .primary)
-                
-                Spacer()
-            }
-            .padding(.horizontal, 6)
-            .frame(height: viewModel.nodeHeight)
-            .contentShape(Rectangle())
-            .background(Color.brown.opacity(0.2))
+            nodeContent(node, isDragging)
+                .gesture(
+                    DragGesture(coordinateSpace: .named("MTreeViewCoordinateSpace"))
+                        .onChanged({ value in
+                            if viewModel.draggingItemId != node.id {
+                                viewModel.draggingItemId = node.id
+                                viewModel.scrollStartOffset = viewModel.scrollOffset
+                            }
+                            viewModel.draggedTranslation = value.translation
+                            viewModel.draggedLocation = value.location
+                        })
+                        .onEnded({ _ in
+                            viewModel.draggedTranslation = .zero
+                            viewModel.draggingItemId = nil
+                            viewModel.draggedLocation = .zero
+                        }),
+                    isEnabled: !isDragging
+                )
             
             if !children.isEmpty {
-                LazyVStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: 0) {
                     ForEach(children) { node in
                         NodeView(
-                            node: node
+                            node: node,
+                            isDragging: isDragging,
+                            nodeContent: nodeContent
                         )
                         .id(node.id)
                     }
@@ -175,38 +198,43 @@ struct NodeView: View {
                 .padding(.leading, 20)
             }
         }
-        .offset(x: xOffset, y: yOffset)
         .overlay {
-            GeometryReader { geo in
-                Color.clear
-                    .onChange(of: geo.frame(in: .named("MTreeViewCoordinateSpace"))) { _, newValue in
-                        DispatchQueue.main.async {
-                            self.viewModel.nodeFrames[node.id] = newValue
+            if !isDragging {
+                GeometryReader { geo in
+                    Color.clear
+                        .onChange(of: geo.frame(in: .named("MTreeViewCoordinateSpace"))) { _, newValue in
+                            DispatchQueue.main.async {
+                                self.viewModel.nodeFrames[node.id] = newValue
+                            }
                         }
-                    }
+                }
             }
         }
-        .gesture(
-            DragGesture(coordinateSpace: .named("MTreeViewCoordinateSpace"))
-                .onChanged({ value in
-                    if viewModel.draggingItemId != node.id {
-                        viewModel.draggingItemId = node.id
-                    }
-                    viewModel.draggedTranslation = value.translation
-                    viewModel.draggedLocation = value.location
-                }).onEnded({ value in
-                    viewModel.draggedTranslation = .zero
-                    viewModel.draggingItemId = nil
-                    viewModel.draggedLocation = .zero
-                })
-        )
     }
 }
-
 
 #Preview {
-    ZStack {
-        TreeView()
-    }
-    .padding(50)
+    TreeView(
+        nodeGroupContent: { group, isDragging in
+            HStack {
+                Text(group.title)
+                    .foregroundStyle(isDragging ? .secondary : .primary)
+                Spacer()
+            }
+            .padding(.horizontal, 6)
+            .frame(height: 30)
+            .background(isDragging ? .clear : Color.blue.opacity(0.2))
+        },
+        nodeContent: { node, isDragging in
+            HStack {
+                Text(node.title)
+                    .foregroundStyle(isDragging ? .secondary : .primary)
+                Spacer()
+            }
+            .frame(height: 30)
+            .padding(.horizontal, 6)
+            .background(isDragging ? .clear : Color.brown.opacity(0.2))
+        }
+    )
 }
+

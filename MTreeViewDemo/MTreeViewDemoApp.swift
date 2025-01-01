@@ -11,7 +11,23 @@ import SwiftUI
 struct MTreeViewDemoApp: App {
     var body: some Scene {
         WindowGroup {
-            TreeView()
+            TreeView(
+                nodeGroupContent: { group, isMock in
+                    HStack {
+                        Text(group.title)
+                            .foregroundStyle(isMock ? .secondary : .primary)
+                        Spacer()
+                    }
+                },
+                nodeContent: { node, isMock in
+                    HStack {
+                        Text(node.title)
+                            .foregroundStyle(isMock ? .secondary : .primary)
+                        Spacer()
+                    }
+                }
+            )
         }
     }
 }
+
