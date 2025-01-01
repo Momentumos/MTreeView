@@ -10,9 +10,22 @@
 		113C2B7C2D1D769300933425 /* MTreeViewDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MTreeViewDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		11CD83982D257850005A4FD1 /* Exceptions for "MTreeViewDemo" folder in "MTreeViewDemo" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				MTreeView,
+			);
+			target = 113C2B7B2D1D769300933425 /* MTreeViewDemo */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		113C2B7E2D1D769300933425 /* MTreeViewDemo */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				11CD83982D257850005A4FD1 /* Exceptions for "MTreeViewDemo" folder in "MTreeViewDemo" target */,
+			);
 			path = MTreeViewDemo;
 			sourceTree = "<group>";
 		};

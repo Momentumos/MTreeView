@@ -12,7 +12,7 @@ struct MTreeViewDemoApp: App {
     var body: some Scene {
         WindowGroup {
             TreeView(
-                nodeGroupContent: { group, isMock in
+                viewModel: .init(), nodeGroupContent: { group, isMock in
                     HStack {
                         Text(group.title)
                             .foregroundStyle(isMock ? .secondary : .primary)

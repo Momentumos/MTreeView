@@ -70,6 +70,17 @@ final class TreeViewModel: ObservableObject, Sendable  {
         nodeGroups.first {$0.id == id} ?? .init()
     }
     
+    func toggleGroupExpansion(with id: UUID) {
+        if let index = nodeGroups.firstIndex(where: {$0.id == id}) {
+            nodeGroups[index].expanded.toggle()
+        }
+    }
+    func toggleNodeExpansion(with id: UUID) {
+        if let index = nodes.firstIndex(where: {$0.id == id}) {
+            nodes[index].expanded.toggle()
+        }
+    }
+    
     init(){
         fillWithMockData()
     }

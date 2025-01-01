@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TreeView<CustomNodeGroupView: View, CustomNodeView: View>: View {
-    @StateObject var viewModel: TreeViewModel = .init()
+    @ObservedObject var viewModel: TreeViewModel
     let nodeGroupContent: (NodeGroup, Bool) -> CustomNodeGroupView
     let nodeContent: (Node, Bool) -> CustomNodeView
     
@@ -123,7 +123,7 @@ struct NodeGroupView<CustomNodeGroupView: View, CustomNodeView: View>: View {
                     isEnabled: !isDragging
                 )
             
-            if !nodes.isEmpty {
+            if !nodes.isEmpty && group.expanded {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(nodes) { node in
                         NodeView(
@@ -184,7 +184,7 @@ struct NodeView<CustomNodeView: View>: View {
                     isEnabled: !isDragging
                 )
             
-            if !children.isEmpty {
+            if !children.isEmpty && node.expanded {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(children) { node in
                         NodeView(
@@ -214,9 +214,22 @@ struct NodeView<CustomNodeView: View>: View {
 }
 
 #Preview {
+    @Previewable @StateObject var viewModel: TreeViewModel = .init()
     TreeView(
+        viewModel: viewModel,
         nodeGroupContent: { group, isDragging in
             HStack {
+                Button(action: {
+                    withAnimation {
+                        viewModel.toggleGroupExpansion(with: group.id)
+                    }
+                }, label: {
+                    Image(systemName: "chevron.down")
+                })
+                .buttonStyle(.plain)
+                .rotationEffect(.degrees(group.expanded ? 180 : 0))
+                .opacity(isDragging ? 0.0 : 1.0)
+                
                 Text(group.title)
                     .foregroundStyle(isDragging ? .secondary : .primary)
                 Spacer()
@@ -227,6 +240,18 @@ struct NodeView<CustomNodeView: View>: View {
         },
         nodeContent: { node, isDragging in
             HStack {
+                if !viewModel.listNodes(in: node.groupId, with: node.id).isEmpty {
+                    Button(action: {
+                        withAnimation {
+                            viewModel.toggleNodeExpansion(with: node.id)
+                        }
+                    }, label: {
+                        Image(systemName: "chevron.down")
+                    })
+                    .buttonStyle(.plain)
+                    .rotationEffect(.degrees(node.expanded ? 180 : 0))
+                    .opacity(isDragging ? 0.0 : 1.0)
+                }
                 Text(node.title)
                     .foregroundStyle(isDragging ? .secondary : .primary)
                 Spacer()
