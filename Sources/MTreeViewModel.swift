@@ -8,7 +8,7 @@
 import Foundation
 
 @MainActor
-final class TreeViewModel: ObservableObject, Sendable  {
+public final class MTreeViewModel: ObservableObject, Sendable  {
     
     @Published private var nodeGroups: [NodeGroup] = []
     @Published private var nodes: [Node] = []

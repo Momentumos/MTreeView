@@ -1,14 +1,11 @@
-//
-//  ContentView.swift
-//  MTreeViewDemo
-//
-//  Created by Mohammad Yeganeh on 12/26/24.
+// The Swift Programming Language
+// https://docs.swift.org/swift-book
 //
 
 import SwiftUI
 
-struct TreeView<CustomNodeGroupView: View, CustomNodeView: View>: View {
-    @ObservedObject var viewModel: TreeViewModel
+struct MTreeView<CustomNodeGroupView: View, CustomNodeView: View>: View {
+    @ObservedObject var viewModel: MTreeViewModel
     let nodeGroupContent: (NodeGroup, Bool) -> CustomNodeGroupView
     let nodeContent: (Node, Bool) -> CustomNodeView
     
@@ -96,7 +93,7 @@ struct NodeGroupView<CustomNodeGroupView: View, CustomNodeView: View>: View {
     var isDragging: Bool
     let nodeGroupContent: (NodeGroup, Bool) -> CustomNodeGroupView
     let nodeContent: (Node, Bool) -> CustomNodeView
-    @EnvironmentObject var viewModel: TreeViewModel
+    @EnvironmentObject var viewModel: MTreeViewModel
     
     var nodes: [Node] {
         viewModel.listNodes(in: group.id, with: nil)
@@ -157,7 +154,7 @@ struct NodeView<CustomNodeView: View>: View {
     var node: Node
     var isDragging: Bool
     let nodeContent: (Node, Bool) -> CustomNodeView
-    @EnvironmentObject var viewModel: TreeViewModel
+    @EnvironmentObject var viewModel: MTreeViewModel
     
     var children: [Node] {
         viewModel.listNodes(in: node.groupId, with: node.id)
@@ -214,8 +211,8 @@ struct NodeView<CustomNodeView: View>: View {
 }
 
 #Preview {
-    @Previewable @StateObject var viewModel: TreeViewModel = .init()
-    TreeView(
+    @Previewable @StateObject var viewModel: MTreeViewModel = .init()
+    MTreeView(
         viewModel: viewModel,
         nodeGroupContent: { group, isDragging in
             HStack {
