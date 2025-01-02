@@ -4,12 +4,19 @@
 
 import SwiftUI
 
-struct MTreeView<CustomNodeGroupView: View, CustomNodeView: View>: View {
+public struct MTreeView<CustomNodeGroupView: View, CustomNodeView: View>: View {
+    
     @ObservedObject var viewModel: MTreeViewModel
     let nodeGroupContent: (NodeGroup, Bool) -> CustomNodeGroupView
     let nodeContent: (Node, Bool) -> CustomNodeView
     
-    var body: some View {
+    public init(viewModel: MTreeViewModel, nodeGroupContent: @escaping (NodeGroup, Bool) -> CustomNodeGroupView, nodeContent: @escaping (Node, Bool) -> CustomNodeView) {
+        self.viewModel = viewModel
+        self.nodeGroupContent = nodeGroupContent
+        self.nodeContent = nodeContent
+    }
+    
+    public var body: some View {
         GeometryReader { geo in
             ScrollViewReader { scroll in
                 ZStack {
@@ -209,54 +216,3 @@ struct NodeView<CustomNodeView: View>: View {
         }
     }
 }
-
-#Preview {
-    @Previewable @StateObject var viewModel: MTreeViewModel = .init()
-    MTreeView(
-        viewModel: viewModel,
-        nodeGroupContent: { group, isDragging in
-            HStack {
-                Button(action: {
-                    withAnimation {
-                        viewModel.toggleGroupExpansion(with: group.id)
-                    }
-                }, label: {
-                    Image(systemName: "chevron.down")
-                })
-                .buttonStyle(.plain)
-                .rotationEffect(.degrees(group.expanded ? 180 : 0))
-                .opacity(isDragging ? 0.0 : 1.0)
-                
-                Text(group.title)
-                    .foregroundStyle(isDragging ? .secondary : .primary)
-                Spacer()
-            }
-            .padding(.horizontal, 6)
-            .frame(height: 30)
-            .background(isDragging ? .clear : Color.blue.opacity(0.2))
-        },
-        nodeContent: { node, isDragging in
-            HStack {
-                if !viewModel.listNodes(in: node.groupId, with: node.id).isEmpty {
-                    Button(action: {
-                        withAnimation {
-                            viewModel.toggleNodeExpansion(with: node.id)
-                        }
-                    }, label: {
-                        Image(systemName: "chevron.down")
-                    })
-                    .buttonStyle(.plain)
-                    .rotationEffect(.degrees(node.expanded ? 180 : 0))
-                    .opacity(isDragging ? 0.0 : 1.0)
-                }
-                Text(node.title)
-                    .foregroundStyle(isDragging ? .secondary : .primary)
-                Spacer()
-            }
-            .frame(height: 30)
-            .padding(.horizontal, 6)
-            .background(isDragging ? .clear : Color.brown.opacity(0.2))
-        }
-    )
-}
-

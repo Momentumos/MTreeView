@@ -8,11 +8,11 @@ import Foundation
 
 public struct Node: Codable, Hashable, Sendable, Identifiable, Equatable {
     public var id: UUID
-    var title: String
-    var position: Float
-    var groupId: UUID?
-    var parentNodeId: UUID?
-    var expanded: Bool = true
+    public var title: String
+    public var position: Float
+    public var groupId: UUID?
+    public var parentNodeId: UUID?
+    public var expanded: Bool = true
     
     
     init(id: UUID, title: String, position: Float, groupId: UUID?, parentNodeId: UUID?, expanded: Bool = true) {

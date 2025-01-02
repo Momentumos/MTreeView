@@ -9,9 +9,9 @@ import Foundation
 
 public struct NodeGroup: Codable, Hashable, Sendable, Identifiable, Equatable {
     public var id: UUID
-    var title: String
-    var position: Float
-    var expanded: Bool = true
+    public var title: String
+    public var position: Float
+    public var expanded: Bool = true
     
     init(id: UUID, title: String, position: Float, expanded: Bool = true) {
         self.id = id

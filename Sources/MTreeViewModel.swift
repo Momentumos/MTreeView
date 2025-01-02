@@ -22,8 +22,13 @@ public final class MTreeViewModel: ObservableObject, Sendable  {
     @Published var draggedLocation: CGPoint = .zero
     @Published var draggingItemId: UUID? = nil
     
-    let groupHeight: CGFloat = 30
-    let nodeHeight: CGFloat = 30
+    var groupHeight: CGFloat
+    var nodeHeight: CGFloat
+    
+    public init(groupHeight: CGFloat, nodeHeight: CGFloat){
+        self.groupHeight = groupHeight
+        self.nodeHeight = nodeHeight
+    }
     
     var draggingOverGroup: UUID? {
         isDraggingGroup ?
@@ -70,21 +75,19 @@ public final class MTreeViewModel: ObservableObject, Sendable  {
         nodeGroups.first {$0.id == id} ?? .init()
     }
     
-    func toggleGroupExpansion(with id: UUID) {
+    public func toggleGroupExpansion(with id: UUID) {
         if let index = nodeGroups.firstIndex(where: {$0.id == id}) {
             nodeGroups[index].expanded.toggle()
         }
     }
-    func toggleNodeExpansion(with id: UUID) {
+    
+    public func toggleNodeExpansion(with id: UUID) {
         if let index = nodes.firstIndex(where: {$0.id == id}) {
             nodes[index].expanded.toggle()
         }
     }
     
-    init(){
-        fillWithMockData()
-    }
-    func fillWithMockData(){
+    public func fillWithMockData(){
         let parent1 = addGroup(title: "Parent 1")
         let parent2 = addGroup(title: "Parent 2")
         let parent3 = addGroup(title: "Parent 3")
@@ -110,22 +113,22 @@ public final class MTreeViewModel: ObservableObject, Sendable  {
         _ = addNode(title: "Child 3 - 4", groupId: parent3.id)
     }
     
-    func setNodeGroups(nodeGroups: [NodeGroup]) {
+    public func setNodeGroups(nodeGroups: [NodeGroup]) {
         self.nodeGroups = nodeGroups
     }
     
-    func setNodes(nodes: [Node]) {
+    public func setNodes(nodes: [Node]) {
         self.nodes = nodes
     }
     // Add a new group
-    func addGroup(id: UUID = UUID(), title: String, position: Float = 0.0, expanded: Bool = true) -> NodeGroup {
+    public func addGroup(id: UUID = UUID(), title: String, position: Float = 0.0, expanded: Bool = true) -> NodeGroup {
         let newGroup = NodeGroup(id: id, title: title, position: position, expanded: expanded)
         nodeGroups.append(newGroup)
         return newGroup
     }
     
     // Add a new node
-    func addNode(id: UUID = UUID(), title: String, position: Float = 0.0, groupId: UUID? = nil, parentNodeId: UUID? = nil, expanded: Bool = true) -> Node {
+    public func addNode(id: UUID = UUID(), title: String, position: Float = 0.0, groupId: UUID? = nil, parentNodeId: UUID? = nil, expanded: Bool = true) -> Node {
         let newNode = Node(id: id, title: title, position: position, groupId: groupId, parentNodeId: parentNodeId, expanded: expanded)
         nodes.append(newNode)
         return newNode
