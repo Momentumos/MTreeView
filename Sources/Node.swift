@@ -6,28 +6,12 @@
 //
 import Foundation
 
-public struct Node: Codable, Hashable, Sendable, Identifiable, Equatable {
-    public var id: UUID
-    public var title: String
-    public var position: Float
-    public var groupId: UUID?
-    public var parentNodeId: UUID?
-    public var expanded: Bool = true
-    
-    
-    init(id: UUID, title: String, position: Float, groupId: UUID?, parentNodeId: UUID?, expanded: Bool = true) {
-        self.id = id
-        self.title = title
-        self.position = position
-        self.groupId = groupId
-        self.parentNodeId = parentNodeId
-        self.expanded = expanded
-    }
-    
-    init(){
-        self.id = .init()
-        self.title = ""
-        self.position = 0.0
-        self.expanded = true
-    }
+public protocol Node: Codable, Hashable, Sendable, Identifiable, Equatable {
+    var id: UUID { get set }
+    var title: String { get set }
+    var position: Float { get set }
+    var groupId: UUID? { get set }
+    var parentNodeId: UUID? { get set }
+    var expanded: Bool { get set }
 }
+

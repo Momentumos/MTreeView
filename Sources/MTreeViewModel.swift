@@ -10,8 +10,8 @@ import Foundation
 @MainActor
 public final class MTreeViewModel: ObservableObject, Sendable  {
     
-    @Published private var nodeGroups: [NodeGroup] = []
-    @Published private var nodes: [Node] = []
+    @Published private var nodeGroups: [any NodeGroup] = []
+    @Published private var nodes: [any Node] = []
     
     @Published var nodeGroupFrames: [UUID: CGRect] = [:]
     @Published var nodeFrames: [UUID: CGRect] = [:]
@@ -24,38 +24,42 @@ public final class MTreeViewModel: ObservableObject, Sendable  {
     
     var groupHeight: CGFloat
     var nodeHeight: CGFloat
+    var childNodeLeadingPadding: CGFloat
     
-    public init(groupHeight: CGFloat, nodeHeight: CGFloat){
+    public init(groupHeight: CGFloat, nodeHeight: CGFloat, childNodeLeadingPadding: CGFloat){
         self.groupHeight = groupHeight
         self.nodeHeight = nodeHeight
+        self.childNodeLeadingPadding = childNodeLeadingPadding
     }
     
     var draggingOverGroup: UUID? {
-        isDraggingGroup ?
-        nodeGroupFrames.first { (uuid, frame) in
-            frame.contains(draggedLocation)
-        }?.key
-        : nil
+        if draggedLocation == .zero {
+            nil
+        }else{
+            isDraggingGroup ?
+            nodeGroupFrames.first { (uuid, frame) in
+                frame.contains(draggedLocation)
+            }?.key
+            : nil
+        }
     }
     
     var draggingOverNode: UUID? {
-        isDraggingGroup ? nil :
-        nodeFrames.sorted { (first, second) in
-            first.value.origin.x > second.value.origin.x
-        }.first { (uuid, frame) in
-            frame.contains(draggedLocation)
-        }?.key
+        if draggedLocation == .zero {
+            nil
+        }else{
+            isDraggingGroup ? nil :
+            nodeFrames.sorted { (first, second) in
+                first.value.origin.x > second.value.origin.x
+            }.first { (uuid, frame) in
+                frame.contains(draggedLocation)
+            }?.key
+        }
     }
     
     var isDraggingGroup: Bool {
         nodeGroups.contains(where: {$0.id == draggingItemId})
     }
-    
-    //    var draggingOverNodesLastChild: UUID {
-    //        nodes.filter({draggingOverNodes.contains($0.id)})
-    //
-    //    }
-    
     
     func findNextItemToScrollto(direction: MScrollDirection, point: CGPoint) -> UUID? {
         let targetNodePoint = CGPoint(x: point.x, y: point.y + (direction == .up ? -nodeHeight : nodeHeight))
@@ -67,82 +71,60 @@ public final class MTreeViewModel: ObservableObject, Sendable  {
         }?.key
     }
     
-    func getSingleNode(with id: UUID) -> Node {
-        nodes.first {$0.id == id} ?? .init()
+    func getSingleNode(with id: UUID) -> (any Node)? {
+        nodes.first {$0.id == id}
     }
     
-    func getSingleGroup(with id: UUID) -> NodeGroup {
-        nodeGroups.first {$0.id == id} ?? .init()
+    func getSingleGroup(with id: UUID) -> (any NodeGroup)? {
+        nodeGroups.first {$0.id == id}
     }
     
-    public func toggleGroupExpansion(with id: UUID) {
+    public func toggleGroupExpansion(with id: UUID?) {
         if let index = nodeGroups.firstIndex(where: {$0.id == id}) {
             nodeGroups[index].expanded.toggle()
         }
     }
     
-    public func toggleNodeExpansion(with id: UUID) {
+    public func toggleNodeExpansion(with id: UUID?) {
         if let index = nodes.firstIndex(where: {$0.id == id}) {
             nodes[index].expanded.toggle()
         }
     }
     
-    public func fillWithMockData(){
-        let parent1 = addGroup(title: "Parent 1")
-        let parent2 = addGroup(title: "Parent 2")
-        let parent3 = addGroup(title: "Parent 3")
-        
-        _ = addNode(title: "Child 1 - 1", groupId: parent1.id)
-        _ = addNode(title: "Child 1 - 2", groupId: parent1.id)
-        _ = addNode(title: "Child 1 - 3", groupId: parent1.id)
-        let node = addNode(title: "Child 1 - 4", groupId: parent1.id)
-        _ = addNode(title: "Child 1 - 4 - 1", groupId: parent1.id, parentNodeId: node.id)
-        _ = addNode(title: "Child 1 - 4 - 2", groupId: parent1.id, parentNodeId: node.id)
-        let node2 = addNode(title: "Child 1 - 4 - 3", groupId: parent1.id, parentNodeId: node.id)
-        _ = addNode(title: "Child 1 - 4 - 3 - 1", groupId: parent1.id, parentNodeId: node2.id)
-        _ = addNode(title: "Child 1 - 4 - 3 - 1", groupId: parent1.id, parentNodeId: node2.id)
-        
-        _ = addNode(title: "Child 2 - 1", groupId: parent2.id)
-        _ = addNode(title: "Child 2 - 2", groupId: parent2.id)
-        _ = addNode(title: "Child 2 - 3", groupId: parent2.id)
-        _ = addNode(title: "Child 2 - 4", groupId: parent2.id)
-        
-        _ = addNode(title: "Child 3 - 1", groupId: parent3.id)
-        _ = addNode(title: "Child 3 - 2", groupId: parent3.id)
-        _ = addNode(title: "Child 3 - 3", groupId: parent3.id)
-        _ = addNode(title: "Child 3 - 4", groupId: parent3.id)
-    }
     
-    public func setNodeGroups(nodeGroups: [NodeGroup]) {
+    public func setNodeGroups(nodeGroups: [any NodeGroup]) {
         self.nodeGroups = nodeGroups
     }
     
-    public func setNodes(nodes: [Node]) {
+    public func setNodes(nodes: [any Node]) {
         self.nodes = nodes
     }
-    // Add a new group
-    public func addGroup(id: UUID = UUID(), title: String, position: Float = 0.0, expanded: Bool = true) -> NodeGroup {
-        let newGroup = NodeGroup(id: id, title: title, position: position, expanded: expanded)
-        nodeGroups.append(newGroup)
-        return newGroup
-    }
     
-    // Add a new node
-    public func addNode(id: UUID = UUID(), title: String, position: Float = 0.0, groupId: UUID? = nil, parentNodeId: UUID? = nil, expanded: Bool = true) -> Node {
-        let newNode = Node(id: id, title: title, position: position, groupId: groupId, parentNodeId: parentNodeId, expanded: expanded)
-        nodes.append(newNode)
-        return newNode
+    public func groupHasChildren(groupId: UUID?) -> Bool {
+        nodes.count(where: {$0.groupId == groupId}) > 0
     }
-    
+    public func nodeHasChildren(nodeId: UUID?) -> Bool {
+        nodes.count(where: {$0.parentNodeId == nodeId}) > 0
+    }
+    public func nodeIsFirstLevel(node: (any Node)?) -> Bool {
+        if node?.parentNodeId == nil {
+            return true
+        }
+        let parent = nodes.first(where: {$0.id == node?.parentNodeId})
+        if parent?.parentNodeId == nil {
+            return true
+        }
+        return false
+    }
     // List all groups
-    func listGroups() -> [NodeGroup] {
+    func listGroups() -> [any NodeGroup] {
         return nodeGroups
             .sorted(by: { $0.position < $1.position })
     }
     
     
     // List all nodes in a group
-    func listNodes(in groupId: UUID?, with parentNodeId: UUID?) -> [Node] {
+    func listNodes(in groupId: UUID?, with parentNodeId: UUID?) -> [any Node] {
         return nodes
             .filter { $0.groupId == groupId && $0.parentNodeId == parentNodeId }
             .sorted(by: { $0.position < $1.position })
