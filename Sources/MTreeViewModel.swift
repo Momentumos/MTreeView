@@ -35,7 +35,7 @@ public final class MTreeViewModel: ObservableObject, Sendable  {
     var draggingOverGroup: UUID? {
         if draggedLocation == .zero {
             nil
-        }else{
+        } else {
             isDraggingGroup ?
             nodeGroupFrames.first { (uuid, frame) in
                 frame.contains(draggedLocation)
@@ -47,7 +47,7 @@ public final class MTreeViewModel: ObservableObject, Sendable  {
     var draggingOverNode: UUID? {
         if draggedLocation == .zero {
             nil
-        }else{
+        } else {
             isDraggingGroup ? nil :
             nodeFrames.sorted { (first, second) in
                 first.value.origin.x > second.value.origin.x
@@ -81,12 +81,16 @@ public final class MTreeViewModel: ObservableObject, Sendable  {
     
     public func toggleGroupExpansion(with id: UUID?) {
         if let index = nodeGroups.firstIndex(where: {$0.id == id}) {
+            nodeFrames.removeAll()
+            nodeGroupFrames.removeAll()
             nodeGroups[index].expanded.toggle()
         }
     }
     
     public func toggleNodeExpansion(with id: UUID?) {
         if let index = nodes.firstIndex(where: {$0.id == id}) {
+            nodeFrames.removeAll()
+            nodeGroupFrames.removeAll()
             nodes[index].expanded.toggle()
         }
     }
