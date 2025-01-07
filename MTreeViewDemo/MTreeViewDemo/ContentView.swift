@@ -57,7 +57,7 @@ struct ContentView: View {
                 .background {
                     if isDragging {
                         RoundedRectangle(cornerRadius: 6)
-                            .fill(Constants.Colors.background.secondary.opacity(0.7))
+                            .fill(Constants.Colors.background.secondary.opacity(0.8))
                             .stroke(Constants.Colors.border.mainHover, lineWidth: 1)
                             .shadow(color: .black.opacity(0.08),radius: 8)
                     }else{
@@ -135,7 +135,7 @@ struct ContentView: View {
                     .background {
                         if isDragging {
                             RoundedRectangle(cornerRadius: 8)
-                                .fill(Constants.Colors.background.main.opacity(0.7))
+                                .fill(Constants.Colors.background.main.opacity(0.8))
                                 .stroke(Constants.Colors.border.mainHover, lineWidth: 1)
                                 .shadow(color: .black.opacity(0.08),radius: 8)
                         }else{

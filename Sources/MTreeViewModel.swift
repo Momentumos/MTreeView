@@ -36,11 +36,9 @@ public final class MTreeViewModel: ObservableObject, Sendable  {
         if draggedLocation == .zero {
             nil
         } else {
-            isDraggingGroup ?
             nodeGroupFrames.first { (uuid, frame) in
                 frame.contains(draggedLocation)
             }?.key
-            : nil
         }
     }
     
