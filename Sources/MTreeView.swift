@@ -25,9 +25,11 @@ public struct MTreeView<CustomNodeGroupView: View, CustomNodeView: View>: View {
                             Rectangle().fill(.clear)
                                 .frame(height: 1)
                                 .overlay {
-                                    GeometryReader { scrollGeo in
-                                        Color.clear.onChange(of: scrollGeo.frame(in: .global).minY) { _, newValue in
-                                            viewModel.scrollOffset = newValue
+                                    if viewModel.draggingActive {
+                                        GeometryReader { scrollGeo in
+                                            Color.clear.onChange(of: scrollGeo.frame(in: .global).minY) { _, newValue in
+                                                viewModel.scrollOffset = newValue
+                                            }
                                         }
                                     }
                                 }
@@ -43,7 +45,10 @@ public struct MTreeView<CustomNodeGroupView: View, CustomNodeView: View>: View {
                                 .id(group.id)
                             }
                         }
+                        .padding(.bottom)
+
                     }
+                    if viewModel.draggingActive {
                     if viewModel.draggingOverNode != nil {
                         let nodeId = viewModel.draggingOverNode!
                         let frame = viewModel.nodeFrames[nodeId] ?? .zero
@@ -61,21 +66,22 @@ public struct MTreeView<CustomNodeGroupView: View, CustomNodeView: View>: View {
                             .frame(width: frame.width, height: 2)
                             .position(x: frame.midX, y: frame.isPointInUpperHalf(viewModel.draggedLocation) ? frame.minY : frame.maxY)
                     }
-                    if let draggingId = viewModel.draggingItemId {
-                        let isGroup = viewModel.isDraggingGroup
-                        if isGroup {
-                            if let frame = viewModel.nodeGroupFrames[draggingId] {
-                                NodeGroupView(group: viewModel.getSingleGroup(with: draggingId), isDragging: true, nodeGroupContent: nodeGroupContent, nodeContent: nodeContent)
-                                    .frame(width: frame.width, height: frame.height)
-                                    .position(x: frame.midX + viewModel.draggedTranslation.width,
-                                              y: frame.midY + viewModel.draggedTranslation.height + (viewModel.scrollStartOffset - viewModel.scrollOffset))
-                            }
-                        } else {
-                            if let frame = viewModel.nodeFrames[draggingId] {
-                                NodeView(node: viewModel.getSingleNode(with: draggingId), isDragging: true, nodeContent: nodeContent)
-                                    .frame(width: frame.width, height: frame.height)
-                                    .position(x: frame.midX + viewModel.draggedTranslation.width,
-                                              y: frame.midY + viewModel.draggedTranslation.height + (viewModel.scrollStartOffset - viewModel.scrollOffset))
+                        if let draggingId = viewModel.draggingItemId {
+                            let isGroup = viewModel.isDraggingGroup
+                            if isGroup {
+                                if let frame = viewModel.nodeGroupFrames[draggingId] {
+                                    NodeGroupView(group: viewModel.getSingleGroup(with: draggingId), isDragging: true, nodeGroupContent: nodeGroupContent, nodeContent: nodeContent)
+                                        .frame(width: frame.width, height: frame.height)
+                                        .position(x: frame.midX + viewModel.draggedTranslation.width,
+                                                  y: frame.midY + viewModel.draggedTranslation.height + (viewModel.scrollStartOffset - viewModel.scrollOffset))
+                                }
+                            } else {
+                                if let frame = viewModel.nodeFrames[draggingId] {
+                                    NodeView(node: viewModel.getSingleNode(with: draggingId), isDragging: true, nodeContent: nodeContent)
+                                        .frame(width: frame.width, height: frame.height)
+                                        .position(x: frame.midX + viewModel.draggedTranslation.width,
+                                                  y: frame.midY + viewModel.draggedTranslation.height + (viewModel.scrollStartOffset - viewModel.scrollOffset))
+                                }
                             }
                         }
                     }
@@ -129,7 +135,7 @@ struct NodeGroupView<CustomNodeGroupView: View, CustomNodeView: View>: View {
                             viewModel.draggingItemId = nil
                             viewModel.draggedLocation = .zero
                         }),
-                    isEnabled: !isDragging
+                    isEnabled: (!isDragging && viewModel.draggingActive)
                 )
             
             if !nodes.isEmpty && group?.expanded == true {
@@ -148,7 +154,7 @@ struct NodeGroupView<CustomNodeGroupView: View, CustomNodeView: View>: View {
         }
         
         .overlay {
-            if !isDragging {
+            if !isDragging && viewModel.draggingActive {
                 GeometryReader { geo in
                     Color.clear
                         .onChange(of: geo.frame(in: .named("MTreeViewCoordinateSpace"))) { _, newValue in
@@ -193,7 +199,7 @@ struct NodeView<CustomNodeView: View>: View {
                             viewModel.draggingItemId = nil
                             viewModel.draggedLocation = .zero
                         }),
-                    isEnabled: !isDragging
+                    isEnabled: (!isDragging && viewModel.draggingActive)
                 )
             
             if !children.isEmpty && node?.expanded == true {
@@ -212,7 +218,7 @@ struct NodeView<CustomNodeView: View>: View {
             }
         }
         .overlay {
-            if !isDragging {
+            if !isDragging && viewModel.draggingActive {
                 GeometryReader { geo in
                     Color.clear
                         .onChange(of: geo.frame(in: .named("MTreeViewCoordinateSpace"))) { _, newValue in

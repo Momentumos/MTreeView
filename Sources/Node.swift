@@ -8,7 +8,6 @@ import Foundation
 
 public protocol Node: Codable, Hashable, Sendable, Identifiable, Equatable {
     var id: UUID { get set }
-    var title: String { get set }
     var position: Float { get set }
     var groupId: UUID? { get set }
     var parentNodeId: UUID? { get set }

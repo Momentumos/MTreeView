@@ -25,11 +25,13 @@ public final class MTreeViewModel: ObservableObject, Sendable  {
     var groupHeight: CGFloat
     var nodeHeight: CGFloat
     var childNodeLeadingPadding: CGFloat
+    var draggingActive: Bool
     
-    public init(groupHeight: CGFloat, nodeHeight: CGFloat, childNodeLeadingPadding: CGFloat){
+    public init(groupHeight: CGFloat, nodeHeight: CGFloat, childNodeLeadingPadding: CGFloat, draggingActive: Bool = true){
         self.groupHeight = groupHeight
         self.nodeHeight = nodeHeight
         self.childNodeLeadingPadding = childNodeLeadingPadding
+        self.draggingActive = draggingActive
     }
     
     var draggingOverGroup: UUID? {
@@ -131,6 +133,8 @@ public final class MTreeViewModel: ObservableObject, Sendable  {
             .filter { $0.groupId == groupId && $0.parentNodeId == parentNodeId }
             .sorted(by: { $0.position < $1.position })
     }
+    
+    
     
     
     // Move a node to a new group or reorder within the same group
