@@ -105,7 +105,7 @@ public final class MTreeViewModel: ObservableObject, Sendable  {
     }
     
     public func groupHasChildren(groupId: UUID?) -> Bool {
-        nodes.count(where: {$0.groupId == groupId}) > 0
+        nodes.count(where: {$0.groupId == groupId && $0.parentNodeId == nil}) > 0
     }
     public func nodeHasChildren(nodeId: UUID?) -> Bool {
         nodes.count(where: {$0.parentNodeId == nodeId}) > 0
@@ -129,9 +129,16 @@ public final class MTreeViewModel: ObservableObject, Sendable  {
     
     // List all nodes in a group
     func listNodes(in groupId: UUID?, with parentNodeId: UUID?) -> [any Node] {
-        return nodes
-            .filter { $0.groupId == groupId && $0.parentNodeId == parentNodeId }
-            .sorted(by: { $0.position < $1.position })
+        if groupId == nil {
+            return nodes
+                .filter { $0.parentNodeId == parentNodeId }
+                .sorted(by: { $0.position < $1.position })
+        }else {
+            return nodes
+                .filter { $0.groupId == groupId && $0.parentNodeId == parentNodeId }
+                .sorted(by: { $0.position < $1.position })
+        }
+       
     }
     
     

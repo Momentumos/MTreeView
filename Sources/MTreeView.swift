@@ -3,6 +3,7 @@
 //
 
 import SwiftUI
+import SwiftUIIntrospect
 
 public struct MTreeView<CustomNodeGroupView: View, CustomNodeView: View>: View {
     
@@ -17,6 +18,37 @@ public struct MTreeView<CustomNodeGroupView: View, CustomNodeView: View>: View {
     }
     
     public var body: some View {
+        let groups = viewModel.listGroups()
+        List {
+            ForEach(0..<groups.count, id:\.self) { i in
+                let group = groups[i]
+                NodeGroupView(
+                    group: group,
+                    isDragging: false,
+                    nodeGroupContent: nodeGroupContent,
+                    nodeContent: nodeContent
+                )
+                .id(group.id)
+                .listItemTint(.clear)
+                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))              .listRowSeparator(.hidden)
+                .listSectionSeparator(.hidden)
+                .listRowBackground(Color.clear)
+                .listStyle(.plain)
+             
+                
+            }
+        }
+#if os(macOS)
+        .introspect(.list, on: .macOS(.v11, .v12, .v13, .v14, .v15), customize: { entitiy in
+            entitiy.enclosingScrollView?.scrollerStyle = .overlay
+        })
+#endif
+        .listRowBackground(Color.clear)
+        .scrollContentBackground(.hidden)
+        .environmentObject(viewModel)
+
+        
+        /*
         GeometryReader { geo in
             ScrollViewReader { scroll in
                 ZStack {
@@ -103,6 +135,8 @@ public struct MTreeView<CustomNodeGroupView: View, CustomNodeView: View>: View {
                 }
             }
         }
+         
+         */
     }
 }
 struct NodeGroupView<CustomNodeGroupView: View, CustomNodeView: View>: View {
@@ -117,6 +151,7 @@ struct NodeGroupView<CustomNodeGroupView: View, CustomNodeView: View>: View {
     }
     
     var body: some View {
+        
         VStack(alignment: .leading, spacing: 0) {
             nodeGroupContent(group, isDragging)
                 .contentShape(Rectangle())
@@ -153,20 +188,20 @@ struct NodeGroupView<CustomNodeGroupView: View, CustomNodeView: View>: View {
             }
         }
         
-        .overlay {
-            if !isDragging && viewModel.draggingActive {
-                GeometryReader { geo in
-                    Color.clear
-                        .onChange(of: geo.frame(in: .named("MTreeViewCoordinateSpace"))) { _, newValue in
-                            DispatchQueue.main.async {
-                                if group != nil {
-                                    self.viewModel.nodeGroupFrames[group!.id] = newValue
-                                }
-                            }
-                        }
-                }
-            }
-        }
+//        .overlay {
+//            if !isDragging && viewModel.draggingActive {
+//                GeometryReader { geo in
+//                    Color.clear
+//                        .onChange(of: geo.frame(in: .named("MTreeViewCoordinateSpace"))) { _, newValue in
+//                            DispatchQueue.main.async {
+//                                if group != nil {
+//                                    self.viewModel.nodeGroupFrames[group!.id] = newValue
+//                                }
+//                            }
+//                        }
+//                }
+//            }
+//        }
     }
 }
 
@@ -177,7 +212,7 @@ struct NodeView<CustomNodeView: View>: View {
     @EnvironmentObject var viewModel: MTreeViewModel
     
     var children: [any Node] {
-        viewModel.listNodes(in: node?.groupId, with: node?.id)
+        viewModel.listNodes(in: nil, with: node?.id)
     }
     
     var body: some View {

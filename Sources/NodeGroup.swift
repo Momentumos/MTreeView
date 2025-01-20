@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreTransferable
 
 public protocol NodeGroup: Codable, Hashable, Sendable, Identifiable, Equatable {
     var id: UUID { get set }
@@ -13,3 +14,4 @@ public protocol NodeGroup: Codable, Hashable, Sendable, Identifiable, Equatable 
     var position: Float { get set }
     var expanded: Bool { get set }
 }
+
